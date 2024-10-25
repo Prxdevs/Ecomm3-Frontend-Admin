@@ -5,10 +5,11 @@ import {
   FormLabel, Input, Select, Stack
 } from '@chakra-ui/react';
 import { EditIcon, DeleteIcon } from '@chakra-ui/icons';
-import { createProduct, deleteProduct, getAllCategories, getAllProducts } from '../actions/apiActions';
+import { createProduct, deleteProduct, getAllCategories, getAllProducts, updateProduct } from '../actions/apiActions';
 
 const ProductManagement = () => {
-  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [editingProduct, setEditingProduct] = useState(null);
   const [newProduct, setNewProduct] = useState({
     name: '',
     category: '',
@@ -45,8 +46,37 @@ const ProductManagement = () => {
     }
   };
 
-  const openAddModal = () => setIsAddModalOpen(true);
-  const closeAddModal = () => setIsAddModalOpen(false);
+  const openAddModal = () => {
+    setEditingProduct(null); // Clear editing state
+    setNewProduct({
+      name: '',
+      category: '',
+      price: '',
+      description: '',
+      tags: [],
+      tagInput: '',
+      variants: [{ color: '', price: '' }],
+      images: []
+    });
+    setIsModalOpen(true);
+  };
+
+  const openEditModal = (product) => {
+    setEditingProduct(product);
+    setNewProduct({
+      name: product.name,
+      category: product.category._id,
+      price: product.price,
+      description: product.description,
+      tags: product.tags,
+      tagInput: '',
+      variants: product.variants.map(v => ({ color: v.color, price: v.price })),
+      images: product.images // URLs for display only
+    });
+    setIsModalOpen(true);
+  };
+
+  const closeModal = () => setIsModalOpen(false);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -94,42 +124,44 @@ const ProductManagement = () => {
     setNewProduct({ ...newProduct, images: Array.from(e.target.files) });
   };
 
-  // ADD NEW PRODUCT FUNCTION
-  const handleAddProduct = async (e) => {
+  const handleSubmitProduct = async (e) => {
     e.preventDefault();
     const formData = new FormData();
-  
-    // Convert comma-separated tags to an array if not already
+
     const tagsArray = typeof newProduct.tags === 'string'
       ? newProduct.tags.split(',').map(tag => tag.trim())
       : newProduct.tags;
-  
-    // Append basic product data
+
+    // Append each field correctly
     formData.append('name', newProduct.name);
     formData.append('category', newProduct.category);
     formData.append('description', newProduct.description);
     formData.append('price', newProduct.price);
-    
-    // Append tags as an array
-    tagsArray.forEach(tag => formData.append('tags[]', tag));
-  
+
+    // Convert tags and variants to JSON strings for consistent formatting
+    formData.append('tags', JSON.stringify(tagsArray));
     formData.append('variants', JSON.stringify(newProduct.variants));
-  
-    // Append images to FormData
+
     for (const image of newProduct.images) {
       formData.append('images', image);
     }
-  
+
     try {
-      const response = await createProduct(formData); // Send FormData
-      console.log('Product added successfully:', response);
-      fetchProducts(); // Refresh the product list
-      closeAddModal();
+      if (editingProduct) {
+        // Update product
+        const response = await updateProduct(editingProduct._id, formData);
+        console.log('Product updated successfully:', response);
+      } else {
+        // Add product
+        const response = await createProduct(formData);
+        console.log('Product added successfully:', response);
+      }
+      fetchProducts();
+      closeModal();
     } catch (error) {
-      console.error('Error adding product:', error);
+      console.error('Error saving product:', error);
     }
   };
-  
 
   return (
     <Box p={5}>
@@ -173,22 +205,22 @@ const ProductManagement = () => {
                 ))}
               </Td>
               <Td>
-                <ButtonGroup>
-                  <Button colorScheme="blue"><EditIcon /></Button>
-                </ButtonGroup>
+                <Button colorScheme="blue" onClick={() => openEditModal(product)}>
+                  <EditIcon />
+                </Button>
               </Td>
             </Tr>
           ))}
         </Tbody>
       </Table>
 
-      <Modal isOpen={isAddModalOpen} onClose={closeAddModal}>
+      <Modal isOpen={isModalOpen} onClose={closeModal}>
         <ModalOverlay />
         <ModalContent>
-          <ModalHeader>Add New Product</ModalHeader>
+          <ModalHeader>{editingProduct ? "Edit Product" : "Add New Product"}</ModalHeader>
           <ModalCloseButton />
           <ModalBody>
-            <form onSubmit={handleAddProduct}>
+            <form onSubmit={handleSubmitProduct}>
               <Stack spacing={4}>
                 <FormControl>
                   <FormLabel>Name</FormLabel>
@@ -266,7 +298,7 @@ const ProductManagement = () => {
                   <Input type="file" name="images" onChange={handleFileChange} multiple />
                 </FormControl>
 
-                <Button type="submit" colorScheme="teal">Add Product</Button>
+                <Button type="submit" colorScheme="teal">{editingProduct ? "Edit Product" : "Add New Product"}</Button>
               </Stack>
             </form>
           </ModalBody>

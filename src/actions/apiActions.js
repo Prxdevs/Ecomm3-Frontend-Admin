@@ -48,3 +48,16 @@ export async function deleteProduct(id) {
         throw error;
     }
 }
+
+export async function updateProduct(selectedProductId, formData) {
+    try {
+        const response = await instance.put(`/products/${selectedProductId}`, formData, {
+            // headers: {
+            //     'Content-Type': 'multipart/form-data', // Ensure you're sending FormData
+            // },
+        });
+        return response.data;
+    } catch (error) {
+        throw error; // Handle error as needed in your component
+    }
+}
