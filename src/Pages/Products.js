@@ -20,6 +20,8 @@ const ProductManagement = () => {
     variants: [{ color: '', price: '' }],
     images: []
   });
+  const [existingImages, setExistingImages] = useState([]); // Track existing images
+  const [removedImages, setRemovedImages] = useState([]); // Track images to remove
   const [products, setProducts] = useState([]);
   const [categories, setCategories] = useState([]);
 
@@ -73,6 +75,8 @@ const ProductManagement = () => {
       variants: product.variants.map(v => ({ color: v.color, price: v.price })),
       images: product.images // URLs for display only
     });
+    setExistingImages(product.images);
+    setRemovedImages([]);
     setIsModalOpen(true);
   };
 
@@ -120,6 +124,12 @@ const ProductManagement = () => {
     });
   };
 
+  const handleRemoveExistingImage = (index) => {
+    const imageToRemove = existingImages[index];
+    setRemovedImages([...removedImages, imageToRemove]); // Add to removed images
+    setExistingImages(existingImages.filter((_, i) => i !== index)); // Update existing images
+  };
+
   const handleFileChange = (e) => {
     setNewProduct({ ...newProduct, images: Array.from(e.target.files) });
   };
@@ -142,6 +152,13 @@ const ProductManagement = () => {
     formData.append('tags', JSON.stringify(tagsArray));
     formData.append('variants', JSON.stringify(newProduct.variants));
 
+    // Append remaining existing images to the formData
+    formData.append('existingImages', JSON.stringify(existingImages));
+
+    // Append removed images to the formData for deletion
+    formData.append('removedImages', JSON.stringify(removedImages));
+
+    // Append new images added in this edit
     for (const image of newProduct.images) {
       formData.append('images', image);
     }
@@ -290,6 +307,32 @@ const ProductManagement = () => {
                       </Stack>
                     ))}
                     <Button onClick={handleAddVariant} colorScheme="blue">Add</Button>
+                  </Stack>
+                </FormControl>
+
+                <FormControl>
+                  <FormLabel>Existing Images</FormLabel>
+                  <Stack direction="row" spacing={2}>
+                    {existingImages.map((image, index) => (
+                      <Box key={index} position="relative">
+                        <Image
+                          src={`http://localhost:5000/uploads/${image}`}
+                          boxSize="50px"
+                          borderRadius="5px"
+                          alt={`Existing image ${index + 1}`}
+                        />
+                        <Button
+                          size="xs"
+                          colorScheme="red"
+                          position="absolute"
+                          top="0"
+                          right="0"
+                          onClick={() => handleRemoveExistingImage(index)}
+                        >
+                          &times;
+                        </Button>
+                      </Box>
+                    ))}
                   </Stack>
                 </FormControl>
 
