@@ -1,6 +1,6 @@
 import axios from "axios";
 
-const baseURL = "http://localhost:5000/api";
+const baseURL = `${process.env.REACT_APP_API_URL}api`;
 
 const instance = axios.create({
     baseURL: baseURL,
@@ -13,6 +13,17 @@ export async function getAllCategories() {
         return response.data;
     } catch (error) {
         throw error;
+    }
+}
+
+export async function updateCategory(selectedCategoryId, formDataForBackend) {
+    try {
+        const response = await instance.put(`/categories/${selectedCategoryId}`, formDataForBackend);
+
+        console.log('newResponse:', response.data); // Check the response
+        return response.data;
+    } catch (error) {
+        throw error; // Handle error as needed in your component
     }
 }
 

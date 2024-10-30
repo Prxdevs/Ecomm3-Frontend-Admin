@@ -14,18 +14,20 @@ const Login = ({ onLogin }) => {
       // Assuming email and password are already defined or retrieved from some input fields
       // const email = 'your';
       // const password = 'your';
-  
+
       // Make the API call to the login endpoint
       const response = await axios.post('http://localhost:5000/api/auth/login', {
         email,
         password,
-      }, {withCredentials: true});
-  
+      },
+        { withCredentials: true }
+      );
+
       // Check if the login was successful based on the API response
       if (response.data.message === 'Login successful') {
         // Call onLogin(true) if authentication is successful
         onLogin(true);
-        navigate('/dashboard'); 
+        navigate('/dashboard');
       } else {
         // Handle unsuccessful login (show error message, etc.)
         console.error('Login failed:', response.data.message);
@@ -37,29 +39,29 @@ const Login = ({ onLogin }) => {
   };
 
   return (
- 
-      <Container maxW="container.md" centerContent>
-        <Box mt="10">
-          <Heading mb="4">Admin Login</Heading>
-          <Input
-            placeholder="Email"
-            mb="4"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-          />
-          <Input
-            type="password"
-            placeholder="Password"
-            mb="4"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-          />
-          <Button colorScheme="teal" onClick={handleLogin}>
-            Login
-          </Button>
-        </Box>
-      </Container>
- 
+
+    <Container maxW="container.md" centerContent>
+      <Box mt="10">
+        <Heading mb="4">Admin Login</Heading>
+        <Input
+          placeholder="Email"
+          mb="4"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+        />
+        <Input
+          type="password"
+          placeholder="Password"
+          mb="4"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+        />
+        <Button colorScheme="teal" onClick={handleLogin}>
+          Login
+        </Button>
+      </Box>
+    </Container>
+
   );
 };
 

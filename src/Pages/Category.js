@@ -1,11 +1,12 @@
 // ProductPage.js
 import React, { useState, useEffect } from 'react';
-import { Box, Heading, Table, Thead, Tbody, Tr, Th, Td, Spinner ,Image,HStack,VStack,IconButton, ButtonGroup, Button, Modal, ModalOverlay, ModalContent, ModalHeader, ModalCloseButton, ModalBody, Stack, FormControl, FormLabel, Input, Select} from '@chakra-ui/react';
-import { EditIcon,DeleteIcon} from '@chakra-ui/icons'
+import { Box, Heading, Table, Thead, Tbody, Tr, Th, Td, Spinner, Image, HStack, VStack, IconButton, ButtonGroup, Button, Modal, ModalOverlay, ModalContent, ModalHeader, ModalCloseButton, ModalBody, Stack, FormControl, FormLabel, Input, Select } from '@chakra-ui/react';
+import { EditIcon, DeleteIcon } from '@chakra-ui/icons'
 import axios from 'axios';
+import { getAllCategories, updateCategory } from '../actions/apiActions';
 
 const Category = () => {
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [category, setCategory] = useState([]);
   const [isEditModalOpen, setEditModalOpen] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState(null);
@@ -16,36 +17,36 @@ const Category = () => {
     name: '',
     image: '',
   });
-  
+
   const fetchCategories = async () => {
     try {
-      const response = await axios.get('http://localhost:4000/admin/categories', {
-        withCredentials: true,
-      });
-      setCategories(response.data);
+      // const response = await axios.get('http://localhost:5000/api/categories');
+      const response = await getAllCategories();
+      setCategory(response);
     } catch (error) {
       console.error('Error fetching categories:', error);
     }
   };
-  
+
   useEffect(() => {
     fetchCategories();
   }, []);
+
   const handleImageChange = (e) => {
     const files = Array.from(e.target.files);
-  
+
     const urls = files.map((file) => URL.createObjectURL(file));
     setImageList((prevImages) => [...prevImages, ...urls]);
-  
+
     // Use functional update to correctly update the image array
     setFormData((prevFormData) => ({ ...prevFormData, image: [...(prevFormData.image || []), ...files] }));
-  
+
     // Log the values directly from state
     console.log('imageList:', [...imageList, ...urls]);
     console.log('formData:', { ...formData, image: [...(formData.image || []), ...files] });
   };
-  
-  
+
+
 
   const removeImage = (index) => {
     const newImageList = [...imageList];
@@ -74,60 +75,50 @@ const Category = () => {
 
   const handleEditSubmit = async (e) => {
     e.preventDefault();
-  
+
     try {
       const formDataForBackend = new FormData();
       for (const key in formData) {
         formDataForBackend.append(key, formData[key]);
       }
-      console.log('FormData for Backend:', formDataForBackend);  
-  
-      const response = await axios.put(
-        `http://localhost:4000/admin/updatecategory/${selectedCategory._id}`,
-        formDataForBackend,
-        {
-          withCredentials: true,
-          headers: {
-            'Content-Type': 'multipart/form-data',
-          },
-        }
-      );
-  
-      console.log('Response:', response.data); // Check the response
-  
+
+      // const response = await axios.put(
+      //   `http://localhost:5000/api/categories/${selectedCategory._id}`, formDataForBackend,
+      // );
+
+      const response = await updateCategory(selectedCategory._id, formDataForBackend);
+
       // After successful submission, close the modal and fetch updated product list
       closeEditModal();
-      fetchCategory();
+      fetchCategories();
     } catch (error) {
       console.error('Error updating Category:', error);
       // Handle the error, e.g., show an error message
     }
   };
-  
-
-
-  const fetchCategory = async () => {
-    try {
-      const response = await axios.get('http://localhost:4000/admin/category', {
-          withCredentials: true,
-        });
-
-      setCategory(response.data);
-      console.log(response.data)
-      setLoading(false);
-    } catch (error) {
-      console.error('Error fetching products:', error);
-      setLoading(false);
-    }
-  };
-  
-  useEffect(() => {
-    fetchCategory();
-  }, []);
 
 
 
+  // const fetchCategory = async () => {
+  //   try {
+  //     const response = await axios.get('http://localhost:4000/admin/category' 
+  //       // ,{
+  //       //   withCredentials: true,
+  //       // }
+  //     );
 
+  //     setCategory(response.data);
+  //     console.log(response.data)
+  //     setLoading(false);
+  //   } catch (error) {
+  //     console.error('Error fetching products:', error);
+  //     setLoading(false);
+  //   }
+  // };
+
+  // useEffect(() => {
+  //   fetchCategory();
+  // }, []);
 
   const openAddModal = () => {
     setAddModalOpen(true);
@@ -159,7 +150,7 @@ const Category = () => {
         }
       }
       console.log('FormData for Backend:', formDataForBackend);
-      const response = await axios.post('http://localhost:4000/admin/addcategory', formDataForBackend, {
+      const response = await axios.post('http://localhost:5000/api/categories', formDataForBackend, {
         withCredentials: true,
         headers: {
           'Content-Type': 'multipart/form-data',
@@ -170,7 +161,7 @@ const Category = () => {
 
       // After successful submission, close the modal and fetch updated product list
       closeAddModal();
-      fetchCategory();
+      fetchCategories();
     } catch (error) {
       console.error('Error adding category:', error);
       // Handle the error, e.g., show an error message
@@ -200,8 +191,10 @@ const Category = () => {
 
   return (
     <Box p={4}>
-      <Heading mb={4}>Category Management</Heading>
-      <Button color={'blueviolet'} onClick={() => openAddModal()}><EditIcon />Add Category</Button>
+      <Box display={'flex'} justifyContent={'space-between'}>
+        <Heading mb={4}>Category Management</Heading>
+        <Button color={'blueviolet'} onClick={() => openAddModal()}><EditIcon />Add Category</Button>
+      </Box>
 
       {loading ? (
         <Spinner size="xl" />
@@ -209,23 +202,25 @@ const Category = () => {
         <Table variant="simple">
           <Thead>
             <Tr>
+              <Th>Sr.No.</Th>
               <Th>Name</Th>
               <Th>Preview</Th>
               <Th>Function</Th>
-              
+
               {/* Add more columns as needed */}
             </Tr>
           </Thead>
           <Tbody>
-            {category.map((category) => (
+            {category.map((category, index) => (
               <Tr key={category._id}>
+                <Td>{index + 1}</Td>
                 <Td>{category.name}</Td>
-                <Td><Image borderRadius={5} src={`http://localhost:4000${category.image[0]}`} height={'60px'} width={'80px'} /></Td>
+                <Td><Image borderRadius={5} src={`http://localhost:5000/uploads${category.image[0]}`} height={'60px'} width={'80px'} /></Td>
                 <Td>
-                    <ButtonGroup>
+                  <ButtonGroup>
                     <Button color={'blueviolet'} onClick={() => openEditModal(category)}><EditIcon /></Button>
                     <Button color={'red'} onClick={() => handleCategorytDelete(category._id)}><DeleteIcon /></Button>
-                    </ButtonGroup>
+                  </ButtonGroup>
                 </Td>
                 {/* Add more columns as needed */}
               </Tr>
@@ -236,8 +231,8 @@ const Category = () => {
 
 
 
-{/* Add Modal */}
-  {isAddModalOpen && (
+      {/* Add Modal */}
+      {isAddModalOpen && (
         <Modal isOpen={isAddModalOpen} onClose={closeAddModal}>
           <ModalOverlay />
           <ModalContent width="50%">
@@ -259,9 +254,9 @@ const Category = () => {
 
 
                   <FormControl>
-                <FormLabel>Images</FormLabel>
-                <Input type="file" name="image" onChange={handleImageChange} multiple />
-              </FormControl>
+                    <FormLabel>Images</FormLabel>
+                    <Input type="file" name="image" onChange={handleImageChange} multiple />
+                  </FormControl>
 
                   <HStack spacing={4} mt={4}>
                     {imageList.map((image, index) => (
@@ -286,9 +281,9 @@ const Category = () => {
         </Modal>
       )}
 
-   {/* Edit Modal */}
-     {/* Edit Modal */}
-     {isEditModalOpen && (
+      {/* Edit Modal */}
+      {/* Edit Modal */}
+      {isEditModalOpen && (
         <Modal isOpen={isEditModalOpen} onClose={closeEditModal}>
           <ModalOverlay />
           <ModalContent width="50%">
@@ -325,7 +320,7 @@ const Category = () => {
       )}
 
 
-   
+
 
     </Box>
   );

@@ -17,22 +17,23 @@ const ProductManagement = () => {
     description: '',
     tags: [],
     tagInput: '',
-    variants: [{ color: '', price: '' }],
+    variants: [{ color: '', price: '', stock: '' }],
     images: []
   });
   const [existingImages, setExistingImages] = useState([]); // Track existing images
   const [removedImages, setRemovedImages] = useState([]); // Track images to remove
   const [products, setProducts] = useState([]);
   const [categories, setCategories] = useState([]);
+  const [filter, setFilter] = useState('');
 
   useEffect(() => {
     fetchProducts();
     fetchCategories();
-  }, []);
+  }, [filter]);
 
   const fetchProducts = async () => {
     try {
-      const response = await getAllProducts();
+      const response = await getAllProducts(filter);
       setProducts(response);
     } catch (error) {
       console.error('Error fetching products:', error);
@@ -57,7 +58,7 @@ const ProductManagement = () => {
       description: '',
       tags: [],
       tagInput: '',
-      variants: [{ color: '', price: '' }],
+      variants: [{ color: '', price: '', stock: '' }],
       images: []
     });
     setIsModalOpen(true);
@@ -72,7 +73,7 @@ const ProductManagement = () => {
       description: product.description,
       tags: product.tags,
       tagInput: '',
-      variants: product.variants.map(v => ({ color: v.color, price: v.price })),
+      variants: product.variants.map(v => ({ color: v.color, price: v.price, stock: v.stock })),
       images: product.images // URLs for display only
     });
     setExistingImages(product.images);
@@ -113,7 +114,7 @@ const ProductManagement = () => {
   const handleAddVariant = () => {
     setNewProduct({
       ...newProduct,
-      variants: [...newProduct.variants, { color: '', price: '' }],
+      variants: [...newProduct.variants, { color: '', price: '', stock: ''}],
     });
   };
 
@@ -180,13 +181,29 @@ const ProductManagement = () => {
     }
   };
 
+  const handleChange = (event) => {
+    const value = event.target.value === "all" ? "" : event.target.value;
+    setFilter(value);
+  };
+
   return (
     <Box p={5}>
       <Box display="flex" justifyContent="space-between" alignItems="center" mb={5}>
         <h1>Product Management</h1>
-        <Button colorScheme="teal" size="md" onClick={openAddModal}>
-          Add Product
-        </Button>
+        <Box display="flex" gap={2}>
+          <Select onChange={handleChange} w={200}>
+            <option value="" disabled>Select your category</option>
+            <option value="all">All</option>
+            {categories.map((category) => (
+              <option key={category._id} value={category.name}>
+                {category.name}
+              </option>
+            ))}
+          </Select>
+          <Button colorScheme="teal" size="md" onClick={openAddModal}>
+            Add Product
+          </Button>
+        </Box>
       </Box>
 
       <Table variant="simple">
@@ -207,9 +224,10 @@ const ProductManagement = () => {
               <Td>
                 <Image
                   borderRadius={5}
-                  src={`http://localhost:5000/uploads${product.images[0]}`}
+                  src={`${process.env.REACT_APP_API_URL}uploads${product.images[0]}`}
                   height="60px"
                   width="80px"
+                  objectFit="contain"
                 />
               </Td>
               <Td>{product.category.name}</Td>
@@ -217,7 +235,7 @@ const ProductManagement = () => {
               <Td>
                 {product.variants.map((variant) => (
                   <div key={variant._id}>
-                    Color: {variant.color}, Price: ₹{variant.price}
+                    Color: {variant.color}, Price: ₹{variant.price}, stock: {variant.stock}
                   </div>
                 ))}
               </Td>
@@ -303,6 +321,12 @@ const ProductManagement = () => {
                           value={variant.price}
                           onChange={(e) => handleVariantChange(index, 'price', e.target.value)}
                         />
+                        <Input
+                          type="text"
+                          placeholder="Stock"
+                          value={variant.stock}
+                          onChange={(e) => handleVariantChange(index, 'stock', e.target.value)}
+                        />
                         <Button size="sm" colorScheme="red" onClick={() => handleRemoveVariant(index)}>-</Button>
                       </Stack>
                     ))}
@@ -316,7 +340,7 @@ const ProductManagement = () => {
                     {existingImages.map((image, index) => (
                       <Box key={index} position="relative">
                         <Image
-                          src={`http://localhost:5000/uploads/${image}`}
+                          src={`${process.env.REACT_APP_API_URL}uploads/${image}`}
                           boxSize="50px"
                           borderRadius="5px"
                           alt={`Existing image ${index + 1}`}
