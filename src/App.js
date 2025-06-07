@@ -10,6 +10,8 @@ import User from './Pages/User';
 import Products from './Pages/Products';
 import OrdersPage from './Pages/Order';
 import Category from './Pages/Category';
+import ProtectedRoute from './components/ProtectedRoute';
+import NoLogin from './components/NoLogin';
 // import ProductDetails from './Pages/ProductDetails/index.js';
 // import Collection from './Pages/Collection/index.js';
 
@@ -21,23 +23,23 @@ function App() {
 
   return (
     <Router>
-    <div>
-      <Header />
+      <div>
+        <Header />
 
-      <Routes>
-        <Route path="/" element={<Login onLogin={handleLogin}/>} />
-        <Route path="/dashboard" element={<Dashboard />} />
-        {/* <Route path="/orders" element={<Order />} /> */}
-        <Route path="/users" element={<User />} />
-        <Route path="/products" element={<Products />} />
-        <Route path="/category" element={<Category />} />
-        <Route path="/orders" element={<OrdersPage />} />
-        {/* <Route path="/productdetails/:productId" element={<ProductDetails />} /> */}
-        {/* <Route path="/collection" element={<Collection />} /> */}
-      </Routes>
+        <Routes>
+          <Route path="/" element={<NoLogin><Login onLogin={handleLogin} /></NoLogin>} />
+          <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+          {/* <Route path="/orders" element={<Order />} /> */}
+          <Route path="/users" element={<ProtectedRoute><User /></ProtectedRoute>} />
+          <Route path="/products" element={<ProtectedRoute><Products /></ProtectedRoute>} />
+          <Route path="/category" element={<ProtectedRoute><Category /></ProtectedRoute>} />
+          <Route path="/orders" element={<ProtectedRoute><OrdersPage /></ProtectedRoute>} />
+          {/* <Route path="/productdetails/:productId" element={<ProductDetails />} /> */}
+          {/* <Route path="/collection" element={<Collection />} /> */}
+        </Routes>
 
-    </div>
-  </Router>
+      </div>
+    </Router>
   );
 }
 

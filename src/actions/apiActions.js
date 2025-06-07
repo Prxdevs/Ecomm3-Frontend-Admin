@@ -7,8 +7,30 @@ const instance = axios.create({
     withCredentials: true,
 });
 
+export async function login(email, password) {
+    try {
+        const response = await instance.post("/auth/adminLogin", {
+            email,
+            password
+        });
+        return response.data;
+    } catch (error) {
+        throw error;
+    }
+}
+
+export async function logout() {
+    try {
+        const response = await instance.post("/auth/logout");
+        return response.data;
+    } catch (error) {
+        throw error;
+    }
+}
+
 export async function getAllCategories() {
     try {
+        console.log('instance', baseURL);
         const response = await instance.get("/categories");
         return response.data;
     } catch (error) {
@@ -36,7 +58,7 @@ export async function getAllProducts(category, color, tags) {
                 tags: tags
             }
         });
-        return response.data;
+        return response.data.products;
     } catch (error) {
         throw error;
     }
